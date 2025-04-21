@@ -1,0 +1,166 @@
+# edit: neo12
+
+experiments:
+  - name: readout line spectroscopy
+    id: ro-roline-spec
+    type: ensemble_avg
+    assumptions: |
+      Chip is connected and readout line is accessible.
+    sweep:
+      - readout frequency
+    monitor:
+      - readout signal strength
+    procedure: |
+      Sweep the readout frequency across a predefined range while monitoring the readout signal strength.
+      Optionally adjust the coupler bias or readout signal power to improve signal clarity.
+      Identify peaks in the response amplitude to locate resonances.
+    post_operations: |
+      Label each peak with the corresponding resonator according to the manufacturer's design.
+
+  - name: readout resonator spectroscopy
+    id: ro-resonator-spec
+    type: ensemble_avg
+    assumptions: |
+      Already know the approximate value of the readout resonator's frequency.
+    sweep:
+      - readout frequency
+      - power (optional)
+    monitor:
+      - readout signal strength
+    procedure: |
+      Perform a fine sweep of the readout frequency around the approximate resonator frequency.
+      Optionally adjust the coupler bias or readout signal power to refine the measurement.
+      In the high power regime, a Lorentzian dip or peak appears around the resonator frequency and may broaden with power.
+      In the low power regime, dispersive coupling to the qubit causes a state-dependent shift of the resonator frequency, which fades as the power increases due to saturation.
+      Monitor the response amplitude to precisely locate the resonator frequency (and power, if not emprically decided).
+    post_operations: |
+      Update the readout frequency & power in the system configuration for subsequent experiments.
+
+  - name: qubit zline bias adjustment
+    id: qb-zbias
+    type: ensemble_avg
+    assumptions: |
+      Chip is connected, and zline bias is accessible.
+    sweep:
+      - zline bias
+    monitor:
+      - qubit frequency shift
+    procedure: |
+      Sweep the zline bias while monitoring the qubit frequency shift.
+      Identify the optimal bias point where the qubit frequency is stable or meets the desired operating condition.
+    post_operations: |
+      Tune the qubit to a z-line insensitive region to minimize sensitivity to bias fluctuations.
+
+  - name: qubit transition spectroscopy
+    id: qb-spec
+    type: ensemble_avg
+    assumptions: |
+      Readout frequency is calibrated; qubit is properly biased.
+    sweep:
+      - drive frequency
+      - z bias (optional)
+    monitor:
+      - qubit excitation probability
+    procedure: |
+      Sweep the drive frequency across a range to locate the 0→1 transition of the qubit.
+      Optionally adjust the z bias to refine the measurement.
+      Apply a microwave pulse to the qubit and monitor the excitation probability via the dispersive shift in the resonator.
+    post_operations: |
+      Update the qubit transition frequency in the system configuration.
+
+  - name: rabi oscillation
+    id: rabi
+    type: ensemble_avg
+    assumptions: |
+      Qubit transition frequency is approximately known.
+    sweep:
+      - drive pulse length
+      - drive pulse amplitude
+      - frequency detuning (df)
+    monitor:
+      - qubit population in |1⟩
+    procedure: |
+      Drive the qubit with pulses of varying lengths or amplitudes while monitoring the population in the |1⟩ state.
+      Observe oscillations in the population to determine the optimal π-pulse parameters.
+    post_operations: |
+      Update the π-pulse parameters in the system configuration.
+
+  - name: ramsey interference
+    id: ramsey
+    type: ensemble_avg
+    assumptions: |
+      π/2 pulse is calibrated; qubit is initialized in |0⟩.
+    sweep:
+      - delay between pulses
+      - frequency detuning (optional)
+      - z bias (for ZPA scan)
+    monitor:
+      - qubit population oscillations
+    procedure: |
+      Apply two π/2 pulses separated by a variable delay to the qubit.
+      Monitor the oscillations in the qubit population to measure the dephasing time T2* and frequency offset.
+      Optionally adjust the z bias to perform a ZPA scan.
+    post_operations: |
+      Update the qubit coherence properties in the system configuration.
+
+  - name: IQ scatter plot
+    id: iq-scatter
+    type: single_shot
+    assumptions: |
+      Qubit states |0⟩ and |1⟩ can be prepared repeatedly.
+    sweep:
+      - none
+    monitor:
+      - I-Q distribution
+    procedure: |
+      Prepare the qubit in |0⟩ and |1⟩ states repeatedly and collect raw I/Q data.
+      Plot the I/Q distribution to visualize the separation of measurement outcomes.
+    post_operations: |
+      Analyze the I/Q scatter plot to determine the distinguishability of qubit states.
+
+  - name: measurement fidelity
+    id: meas-fid
+    type: single_shot
+    assumptions: |
+      IQ state clusters for |0⟩ and |1⟩ are separable.
+    sweep:
+      - number of repetitions
+    monitor:
+      - assignment error
+    procedure: |
+      Prepare the qubit in |0⟩ and |1⟩ states repeatedly and measure the assignment error.
+      Perform statistical analysis to estimate the fidelity of qubit readout.
+    post_operations: |
+      Update the readout fidelity metrics in the system configuration.
+
+  - name: excited state spectroscopy (|1⟩→|2⟩)
+    id: es-spec
+    type: ensemble_avg
+    assumptions: |
+      Qubit is calibrated up to |1⟩ state; sufficient anharmonicity.
+    sweep:
+      - drive frequency near |1⟩→|2⟩
+    monitor:
+      - population in |2⟩ or dispersive shift
+    procedure: |
+      Drive the qubit from the |1⟩ state to the |2⟩ state by sweeping the drive frequency near the |1⟩→|2⟩ transition.
+      Monitor the population in the |2⟩ state or the dispersive shift to locate the transition.
+    post_operations: |
+      Update the |1⟩→|2⟩ transition frequency in the system configuration.
+
+  - name: one-qubit gate calibration
+    id: 1q-cal
+    type: ensemble_avg
+    assumptions: |
+      Qubit transition frequency and π-pulse duration are known.
+    sweep:
+      - π pulse amplitude
+      - virtual Z angle
+      - detuning for phase adjustment
+    monitor:
+      - final qubit state fidelity
+    procedure: |
+      Fine-tune the single-qubit gate parameters, including amplitude, detuning, and phase shift.
+      Perform experiments to optimize the π and π/2 pulses for high-fidelity quantum operations.
+    post_operations: |
+      Update the single-qubit gate parameters in the system configuration.
