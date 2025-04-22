@@ -1,0 +1,127 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 800px;
+                 height: 600px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "id": "ro-roline-spec", "label": "ro-roline-spec", "shape": "dot", "size": 10, "title": "\u003cb\u003ename\u003c/b\u003e: readout line spectroscopy\u003cbr\u003e\u003cb\u003etype\u003c/b\u003e: ensemble_avg\u003cbr\u003e\u003cb\u003eassumptions\u003c/b\u003e: Chip is connected and readout line is accessible.\n\u003cbr\u003e\u003cb\u003esweep\u003c/b\u003e: [\u0027readout frequency\u0027]\u003cbr\u003e\u003cb\u003emonitor\u003c/b\u003e: [\u0027readout signal strength\u0027]\u003cbr\u003e\u003cb\u003eprocedure\u003c/b\u003e: Sweep the readout frequency across a predefined range while monitoring the readout signal strength.\nOptionally adjust the coupler bias or readout signal power to improve signal clarity.\nIdentify peaks in the response amplitude to locate resonances.\n\u003cbr\u003e\u003cb\u003epost_operations\u003c/b\u003e: Label each peak with the corresponding resonator according to the manufacturer\u0027s design.\n"}, {"color": "#97c2fc", "id": "ro-resonator-spec", "label": "ro-resonator-spec", "shape": "dot", "size": 10, "title": "\u003cb\u003ename\u003c/b\u003e: readout resonator spectroscopy\u003cbr\u003e\u003cb\u003etype\u003c/b\u003e: ensemble_avg\u003cbr\u003e\u003cb\u003eassumptions\u003c/b\u003e: Already know the approximate value of the readout resonator\u0027s frequency.\n\u003cbr\u003e\u003cb\u003esweep\u003c/b\u003e: [\u0027readout frequency\u0027, \u0027power (optional)\u0027]\u003cbr\u003e\u003cb\u003emonitor\u003c/b\u003e: [\u0027readout signal strength\u0027]\u003cbr\u003e\u003cb\u003eprocedure\u003c/b\u003e: Perform a fine sweep of the readout frequency around the approximate resonator frequency.\nOptionally adjust the coupler bias or readout signal power to refine the measurement.\nIn the high power regime, a Lorentzian dip or peak appears around the resonator frequency and may broaden with power.\nIn the low power regime, dispersive coupling to the qubit causes a state-dependent shift of the resonator frequency, which fades as the power increases due to saturation.\nMonitor the response amplitude to precisely locate the resonator frequency (and power, if not emprically decided).\n\u003cbr\u003e\u003cb\u003epost_operations\u003c/b\u003e: Update the readout frequency \u0026 power in the registry for subsequent experiments.\n"}, {"color": "#97c2fc", "id": "qb-zline-idle", "label": "qb-zline-idle", "shape": "dot", "size": 10, "title": "\u003cb\u003ename\u003c/b\u003e: qubit zline idling bias calibration\u003cbr\u003e\u003cb\u003etype\u003c/b\u003e: ensemble_avg\u003cbr\u003e\u003cb\u003eassumptions\u003c/b\u003e: Readout resonator frequency is calibrated.\n\u003cbr\u003e\u003cb\u003esweep\u003c/b\u003e: [\u0027zline bias\u0027, \u0027readout frequency\u0027]\u003cbr\u003e\u003cb\u003emonitor\u003c/b\u003e: [\u0027readout signal strength\u0027]\u003cbr\u003e\u003cb\u003eprocedure\u003c/b\u003e: Sweep the zline bias and readout frequency while monitoring the readout signal strength.\nIdentify the optimal zline bias point where the readout resonator is insensitive to qubit frequency fluctuation (i.e. zline fluctuation).\n\u003cbr\u003e\u003cb\u003epost_operations\u003c/b\u003e: Update the default qubit zline bias to an insensitive region.\n"}, {"color": "#97c2fc", "id": "ro-resonator-freq-zline-biased", "label": "ro-resonator-freq-zline-biased", "shape": "dot", "size": 10, "title": "\u003cb\u003ename\u003c/b\u003e: readout resonator frequency recalibration with zline biased at idling point\u003cbr\u003e\u003cb\u003etype\u003c/b\u003e: ensemble_avg\u003cbr\u003e\u003cb\u003eassumptions\u003c/b\u003e: Qubit is properly biased.\n\u003cbr\u003e\u003cb\u003esweep\u003c/b\u003e: [\u0027readout frequency\u0027]\u003cbr\u003e\u003cb\u003emonitor\u003c/b\u003e: [\u0027readout signal strength\u0027]\u003cbr\u003e\u003cb\u003eprocedure\u003c/b\u003e: Sweep the readout frequency while monitoring the readout signal strength.\nIdentify the resonator frequency by locating the peak in the response amplitude.\n\u003cbr\u003e\u003cb\u003epost_operations\u003c/b\u003e: Update the readout frequency in the registry.\n"}, {"color": "#97c2fc", "id": "qb-spec", "label": "qb-spec", "shape": "dot", "size": 10, "title": "\u003cb\u003ename\u003c/b\u003e: qubit transition spectroscopy\u003cbr\u003e\u003cb\u003etype\u003c/b\u003e: ensemble_avg\u003cbr\u003e\u003cb\u003eassumptions\u003c/b\u003e: Readout frequency is calibrated; qubit is properly biased.\n\u003cbr\u003e\u003cb\u003esweep\u003c/b\u003e: [\u0027drive frequency\u0027]\u003cbr\u003e\u003cb\u003emonitor\u003c/b\u003e: [\u0027readout signal strength\u0027]\u003cbr\u003e\u003cb\u003eprocedure\u003c/b\u003e: Sweep the drive frequency across a range to locate the 0\u21921 transition of the qubit.\nApply a microwave pulse to the qubit and monitor the readout signal strength affected the dispersive shift in the resonator.\n\u003cbr\u003e\u003cb\u003epost_operations\u003c/b\u003e: Update the qubit transition frequency f10 in the registry.\n"}, {"color": "#97c2fc", "id": "rabi-amp", "label": "rabi-amp", "shape": "dot", "size": 10, "title": "\u003cb\u003ename\u003c/b\u003e: rabi oscillation\u003cbr\u003e\u003cb\u003etype\u003c/b\u003e: ensemble_avg\u003cbr\u003e\u003cb\u003eassumptions\u003c/b\u003e: Qubit transition frequency is approximately known.\n\u003cbr\u003e\u003cb\u003esweep\u003c/b\u003e: [\u0027drive pulse amplitude\u0027]\u003cbr\u003e\u003cb\u003emonitor\u003c/b\u003e: [\u0027readout signal strength\u0027]\u003cbr\u003e\u003cb\u003eprocedure\u003c/b\u003e: Drive the qubit with pulses of varying amplitudes while monitoring the readout signal strength.\nObserve oscillations in the strength to determine the optimal \u03c0-pulse amplitude.\n\u003cbr\u003e\u003cb\u003epost_operations\u003c/b\u003e: Update the \u03c0-pulse amplitude in the registry.\n"}, {"color": "#97c2fc", "id": "iq-scatter-uncalibrated", "label": "iq-scatter-uncalibrated", "shape": "dot", "size": 10, "title": "\u003cb\u003ename\u003c/b\u003e: IQ scatter with uncalibrated pi pulses\u003cbr\u003e\u003cb\u003etype\u003c/b\u003e: single_shot\u003cbr\u003e\u003cb\u003eassumptions\u003c/b\u003e: Qubit transition frequency is approximately known.\n\u003cbr\u003e\u003cb\u003eprocedure\u003c/b\u003e: Drive the qubit with a \u03c0-pulse or do nothing and then measure the readout signal strength.\nPerform clustering on the I/Q data to identify the |0\u27e9 and |1\u27e9 states.\nCalculate the readout matrix.\n\u003cbr\u003e\u003cb\u003epost_operations\u003c/b\u003e: Update the I/Q center and readout matrix in the registry.\n"}, {"color": "#97c2fc", "id": "ramsey-inaccurate", "label": "ramsey-inaccurate", "shape": "dot", "size": 10, "title": "\u003cb\u003ename\u003c/b\u003e: ramsey interference (inaccurate)\u003cbr\u003e\u003cb\u003etype\u003c/b\u003e: ensemble_avg\u003cbr\u003e\u003cb\u003eassumptions\u003c/b\u003e: \u03c0 pulse is calibrated.\n\u003cbr\u003e\u003cb\u003esweep\u003c/b\u003e: [\u0027delay between \u03c0/2 pulses\u0027]\u003cbr\u003e\u003cb\u003emonitor\u003c/b\u003e: [\u0027qubit population oscillations\u0027]\u003cbr\u003e\u003cb\u003eprocedure\u003c/b\u003e: Apply two \u03c0/2 pulses (half amplitude \u03c0 pulses) separated by a variable delay to the qubit.\nMonitor the oscillations in the qubit population to measure the dephasing time T2* and frequency offset.\nOptionally adjust the z bias to perform a ZPA scan.\n\u003cbr\u003e\u003cb\u003epost_operations\u003c/b\u003e: Update the qubit coherence properties in the registry.\n"}, {"color": "#97c2fc", "id": "iq-scatter-after-ramsey", "label": "iq-scatter-after-ramsey", "shape": "dot", "size": 10, "title": "\u003cb\u003ename\u003c/b\u003e: IQ scatter with ramsey-calibrated pi pulses\u003cbr\u003e\u003cb\u003etype\u003c/b\u003e: single_shot\u003cbr\u003e\u003cb\u003eassumptions\u003c/b\u003e: Qubit transition frequency is approximately known.\n\u003cbr\u003e\u003cb\u003eprocedure\u003c/b\u003e: Drive the qubit with a \u03c0-pulse or do nothing and then measure the readout signal strength.\nPerform clustering on the I/Q data to identify the |0\u27e9 and |1\u27e9 states.\nCalculate the readout matrix.\n\u003cbr\u003e\u003cb\u003epost_operations\u003c/b\u003e: Update the I/Q center and readout matrix in the registry.\n"}, {"color": "#97c2fc", "id": "meas-fid", "label": "meas-fid", "shape": "dot", "size": 10, "title": "\u003cb\u003ename\u003c/b\u003e: measurement fidelity\u003cbr\u003e\u003cb\u003etype\u003c/b\u003e: single_shot\u003cbr\u003e\u003cb\u003eassumptions\u003c/b\u003e: IQ state clusters for |0\u27e9 and |1\u27e9 are separable.\n\u003cbr\u003e\u003cb\u003eprocedure\u003c/b\u003e: Prepare the qubit in |0\u27e9 and |1\u27e9 states repeatedly and measure the assignment error.\n\u003cbr\u003e\u003cb\u003epost_operations\u003c/b\u003e: Update the readout fidelity metrics in the registry.\n"}, {"color": "#97c2fc", "id": "f12-spec", "label": "f12-spec", "shape": "dot", "size": 10, "title": "\u003cb\u003ename\u003c/b\u003e: f12 transition frequency spectroscopy\u003cbr\u003e\u003cb\u003etype\u003c/b\u003e: ensemble_avg\u003cbr\u003e\u003cb\u003eassumptions\u003c/b\u003e: Qubit is calibrated up to |1\u27e9 state; sufficient anharmonicity.\n\u003cbr\u003e\u003cb\u003esweep\u003c/b\u003e: [\u0027drive frequency near |1\u27e9\u2192|2\u27e9\u0027]\u003cbr\u003e\u003cb\u003emonitor\u003c/b\u003e: [\u0027population in |2\u27e9 or dispersive shift\u0027]\u003cbr\u003e\u003cb\u003eprocedure\u003c/b\u003e: Drive the qubit from the |1\u27e9 state to the |2\u27e9 state by sweeping the drive frequency near the |1\u27e9\u2192|2\u27e9 transition.\nMonitor the population in the |2\u27e9 state or the dispersive shift to locate the transition.\n\u003cbr\u003e\u003cb\u003epost_operations\u003c/b\u003e: Update the |1\u27e9\u2192|2\u27e9 transition frequency in the registry.\n"}, {"color": "#97c2fc", "id": "1q-cal", "label": "1q-cal", "shape": "dot", "size": 10, "title": "\u003cb\u003ename\u003c/b\u003e: one-qubit gate calibration\u003cbr\u003e\u003cb\u003etype\u003c/b\u003e: ensemble_avg\u003cbr\u003e\u003cb\u003eassumptions\u003c/b\u003e: Qubit transition frequency and \u03c0-pulse duration are known.\n\u003cbr\u003e\u003cb\u003esweep\u003c/b\u003e: [\u0027\u03c0 pulse amplitude\u0027, \u0027virtual Z angle\u0027, \u0027detuning for phase adjustment\u0027]\u003cbr\u003e\u003cb\u003emonitor\u003c/b\u003e: [\u0027final qubit state fidelity\u0027]\u003cbr\u003e\u003cb\u003eprocedure\u003c/b\u003e: Fine-tune the single-qubit gate parameters, including amplitude, detuning, and phase shift.\nPerform experiments to optimize the \u03c0 and \u03c0/2 pulses for high-fidelity quantum operations.\n\u003cbr\u003e\u003cb\u003epost_operations\u003c/b\u003e: Update the single-qubit gate parameters in the registry.\n"}]);
+                  edges = new vis.DataSet([{"arrows": "to", "from": "ro-roline-spec", "to": "ro-resonator-spec", "width": 1}, {"arrows": "to", "from": "ro-resonator-spec", "to": "qb-zline-idle", "width": 1}, {"arrows": "to", "from": "qb-zline-idle", "to": "ro-resonator-freq-zline-biased", "width": 1}, {"arrows": "to", "from": "ro-resonator-freq-zline-biased", "to": "qb-spec", "width": 1}, {"arrows": "to", "from": "qb-spec", "to": "rabi-amp", "width": 1}, {"arrows": "to", "from": "rabi-amp", "to": "iq-scatter-uncalibrated", "width": 1}, {"arrows": "to", "from": "iq-scatter-uncalibrated", "to": "ramsey-inaccurate", "width": 1}, {"arrows": "to", "from": "ramsey-inaccurate", "to": "iq-scatter-after-ramsey", "width": 1}, {"arrows": "to", "from": "iq-scatter-after-ramsey", "to": "meas-fid", "width": 1}, {"arrows": "to", "from": "meas-fid", "to": "f12-spec", "width": 1}, {"arrows": "to", "from": "f12-spec", "to": "1q-cal", "width": 1}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {"physics": {"enabled": true, "barnesHut": {"gravitationalConstant": -3000, "centralGravity": 0.3, "springLength": 100, "springConstant": 0.04, "damping": 0.09, "avoidOverlap": 1}, "minVelocity": 0.75}, "edges": {"smooth": false}};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

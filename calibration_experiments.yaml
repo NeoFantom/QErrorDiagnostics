@@ -1,9 +1,10 @@
-# edit: neo13
+# edit: neo15
 
 experiments:
-  - name: readout line spectroscopy
+  - name: RO line spectroscopy
     id: ro-roline-spec
-    type: ensemble_avg
+    measure_type: ensemble_avg
+    stage: RO_resonator
     assumptions: |
       Chip is connected and readout line is accessible.
     sweep:
@@ -11,15 +12,16 @@ experiments:
     monitor:
       - readout signal strength
     procedure: |
-      Sweep the readout frequency across a predefined range while monitoring the readout signal strength.
-      Optionally adjust the coupler bias or readout signal power to improve signal clarity.
-      Identify peaks in the response amplitude to locate resonances.
+      - Sweep the readout frequency across a predefined range while monitoring the readout signal strength.
+      - Optionally adjust the coupler bias or readout signal power to improve signal clarity.
+      - Identify peaks in the response amplitude to locate resonances.
     post_operations: |
       Label each peak with the corresponding resonator according to the manufacturer's design.
 
-  - name: readout resonator spectroscopy
+  - name: RO resonator spectroscopy
     id: ro-resonator-spec
-    type: ensemble_avg
+    measure_type: ensemble_avg
+    stage: RO_resonator
     assumptions: |
       Already know the approximate value of the readout resonator's frequency.
     sweep:
@@ -28,17 +30,18 @@ experiments:
     monitor:
       - readout signal strength
     procedure: |
-      Perform a fine sweep of the readout frequency around the approximate resonator frequency.
-      Optionally adjust the coupler bias or readout signal power to refine the measurement.
-      In the high power regime, a Lorentzian dip or peak appears around the resonator frequency and may broaden with power.
-      In the low power regime, dispersive coupling to the qubit causes a state-dependent shift of the resonator frequency, which fades as the power increases due to saturation.
-      Monitor the response amplitude to precisely locate the resonator frequency (and power, if not emprically decided).
+      - Perform a fine sweep of the readout frequency around the approximate resonator frequency.
+      - Optionally adjust the coupler bias or readout signal power to refine the measurement.
+      - In the high power regime, a Lorentzian dip or peak appears around the resonator frequency and may broaden with power.
+      - In the low power regime, dispersive coupling to the qubit causes a state-dependent shift of the resonator frequency, which fades as the power increases due to saturation.
+      - Monitor the response amplitude to precisely locate the resonator frequency (and power, if not empirically decided).
     post_operations: |
       Update the readout frequency & power in the registry for subsequent experiments.
 
-  - name: qubit zline idling bias calibration
+  - name: zline idle point
     id: qb-zline-idle
-    type: ensemble_avg
+    measure_type: ensemble_avg
+    stage: qubit
     assumptions: |
       Readout resonator frequency is calibrated.
     sweep:
@@ -47,14 +50,15 @@ experiments:
     monitor:
       - readout signal strength
     procedure: |
-      Sweep the zline bias and readout frequency while monitoring the readout signal strength.
-      Identify the optimal zline bias point where the readout resonator is insensitive to qubit frequency fluctuation (i.e. zline fluctuation).
+      - Sweep the zline bias and readout frequency while monitoring the readout signal strength.
+      - Identify the optimal zline bias point where the readout resonator is insensitive to qubit frequency fluctuation (i.e., zline fluctuation).
     post_operations: |
       Update the default qubit zline bias to an insensitive region.
 
-  - name: readout resonator frequency recalibration with zline biased at idling point
+  - name: RO spectroscopy (zline biased)
     id: ro-resonator-freq-zline-biased
-    type: ensemble_avg
+    measure_type: ensemble_avg
+    stage: RO_resonator
     assumptions: |
       Qubit is properly biased.
     sweep:
@@ -62,14 +66,15 @@ experiments:
     monitor:
       - readout signal strength
     procedure: |
-      Sweep the readout frequency while monitoring the readout signal strength.
-      Identify the resonator frequency by locating the peak in the response amplitude.
+      - Sweep the readout frequency while monitoring the readout signal strength.
+      - Identify the resonator frequency by locating the peak in the response amplitude.
     post_operations: |
       Update the readout frequency in the registry.
 
-  - name: qubit transition spectroscopy
-    id: qb-spec
-    type: ensemble_avg
+  - name: f01 spectroscopy
+    id: f01-spec
+    measure_type: ensemble_avg
+    stage: qubit
     assumptions: |
       Readout frequency is calibrated; qubit is properly biased.
     sweep:
@@ -77,43 +82,44 @@ experiments:
     monitor:
       - readout signal strength
     procedure: |
-      Sweep the drive frequency across a range to locate the 0→1 transition of the qubit.
-      Apply a microwave pulse to the qubit and monitor the readout signal strength affected the dispersive shift in the resonator.
+      - Sweep the drive frequency across a range to locate the 0→1 transition of the qubit.
+      - Apply a microwave pulse to the qubit and monitor the readout signal strength affected by the dispersive shift in the resonator.
     post_operations: |
       Update the qubit transition frequency f10 in the registry.
 
-  - name: rabi oscillation
+  - name: rabi for drive amplitude
     id: rabi-amp
-    type: ensemble_avg
+    measure_type: ensemble_avg
+    stage: qubit
     assumptions: |
       Qubit transition frequency is approximately known.
     sweep:
       - drive pulse amplitude
-      # - drive pulse length (either length or amplitude)
-      # - frequency detuning (df)
     monitor:
       - readout signal strength
     procedure: |
-      Drive the qubit with pulses of varying amplitudes while monitoring the readout signal strength.
-      Observe oscillations in the strength to determine the optimal π-pulse amplitude.
+      - Drive the qubit with pulses of varying amplitudes while monitoring the readout signal strength.
+      - Observe oscillations in the strength to determine the optimal π-pulse amplitude.
     post_operations: |
       Update the π-pulse amplitude in the registry.
 
-  - name: IQ scatter with uncalibrated pi pulses
+  - name: IQ scatter (uncalibrated)
     id: iq-scatter-uncalibrated
-    type: single_shot
+    measure_type: single_shot
+    stage: qubit
     assumptions: |
       Qubit transition frequency is approximately known.
     procedure: |
-      Drive the qubit with a π-pulse or do nothing and then measure the readout signal strength.
-      Perform clustering on the I/Q data to identify the |0⟩ and |1⟩ states.
-      Calculate the readout matrix.
+      - Drive the qubit with a π-pulse or do nothing and then measure the readout signal strength.
+      - Perform clustering on the I/Q data to identify the |0⟩ and |1⟩ states.
+      - Calculate the readout matrix.
     post_operations: |
       Update the I/Q center and readout matrix in the registry.
 
-  - name: ramsey interference (inaccurate)
+  - name: ramsey (inaccurate)
     id: ramsey-inaccurate
-    type: ensemble_avg
+    measure_type: ensemble_avg
+    stage: qubit
     assumptions: |
       π pulse is calibrated.
     sweep:
@@ -121,27 +127,29 @@ experiments:
     monitor:
       - qubit population oscillations
     procedure: |
-      Apply two π/2 pulses (half amplitude π pulses) separated by a variable delay to the qubit.
-      Monitor the oscillations in the qubit population to measure the dephasing time T2* and frequency offset.
-      Optionally adjust the z bias to perform a ZPA scan.
+      - Apply two π/2 pulses (half amplitude π pulses) separated by a variable delay to the qubit.
+      - Monitor the oscillations in the qubit population to measure the dephasing time T2* and frequency offset.
+      - Optionally adjust the z bias to perform a ZPA scan.
     post_operations: |
       Update the qubit coherence properties in the registry.
 
-  - name: IQ scatter with ramsey-calibrated pi pulses
+  - name: IQ scatter (after ramsey)
     id: iq-scatter-after-ramsey
-    type: single_shot
+    measure_type: single_shot
+    stage: qubit
     assumptions: |
       Qubit transition frequency is approximately known.
     procedure: |
-      Drive the qubit with a π-pulse or do nothing and then measure the readout signal strength.
-      Perform clustering on the I/Q data to identify the |0⟩ and |1⟩ states.
-      Calculate the readout matrix.
+      - Drive the qubit with a π-pulse or do nothing and then measure the readout signal strength.
+      - Perform clustering on the I/Q data to identify the |0⟩ and |1⟩ states.
+      - Calculate the readout matrix.
     post_operations: |
       Update the I/Q center and readout matrix in the registry.
 
   - name: measurement fidelity
     id: meas-fid
-    type: single_shot
+    measure_type: single_shot
+    stage: qubit
     assumptions: |
       IQ state clusters for |0⟩ and |1⟩ are separable.
     procedure: |
@@ -149,9 +157,10 @@ experiments:
     post_operations: |
       Update the readout fidelity metrics in the registry.
 
-  - name: f12 transition frequency spectroscopy
+  - name: f12 spectroscopy
     id: f12-spec
-    type: ensemble_avg
+    measure_type: ensemble_avg
+    stage: qubit
     assumptions: |
       Qubit is calibrated up to |1⟩ state; sufficient anharmonicity.
     sweep:
@@ -159,14 +168,15 @@ experiments:
     monitor:
       - population in |2⟩ or dispersive shift
     procedure: |
-      Drive the qubit from the |1⟩ state to the |2⟩ state by sweeping the drive frequency near the |1⟩→|2⟩ transition.
-      Monitor the population in the |2⟩ state or the dispersive shift to locate the transition.
+      - Drive the qubit from the |1⟩ state to the |2⟩ state by sweeping the drive frequency near the |1⟩→|2⟩ transition.
+      - Monitor the population in the |2⟩ state or the dispersive shift to locate the transition.
     post_operations: |
       Update the |1⟩→|2⟩ transition frequency in the registry.
 
   - name: one-qubit gate calibration
     id: 1q-cal
-    type: ensemble_avg
+    measure_type: ensemble_avg
+    stage: 1qb_gate
     assumptions: |
       Qubit transition frequency and π-pulse duration are known.
     sweep:
@@ -176,8 +186,8 @@ experiments:
     monitor:
       - final qubit state fidelity
     procedure: |
-      Fine-tune the single-qubit gate parameters, including amplitude, detuning, and phase shift.
-      Perform experiments to optimize the π and π/2 pulses for high-fidelity quantum operations.
+      - Fine-tune the single-qubit gate parameters, including amplitude, detuning, and phase shift.
+      - Perform experiments to optimize the π and π/2 pulses for high-fidelity quantum operations.
     post_operations: |
       Update the single-qubit gate parameters in the registry.
 
@@ -189,8 +199,8 @@ graph:
   qb-zline-idle:
     - ro-resonator-freq-zline-biased
   ro-resonator-freq-zline-biased:
-    - qb-spec
-  qb-spec:
+    - f01-spec
+  f01-spec:
     - rabi-amp
   rabi-amp:
     - iq-scatter-uncalibrated
