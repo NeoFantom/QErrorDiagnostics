@@ -73,6 +73,7 @@
     popup.style.display = 'none';
   }
 
+  // Helper function to make the popup draggable
   function makePopupDraggable() {
     const popup = document.getElementById('popup');
     const header = document.getElementById('popup-header');
@@ -129,6 +130,7 @@
       return map;
     }, {});
 
+    // Initialize Cytoscape with the loaded data
     const cy = cytoscape({
       container: document.getElementById('cy'),
       elements: [...nodes, ...edges],
@@ -143,7 +145,8 @@
       ]
     });
 
-    cy.on('onetap', 'node', function(evt) {
+    // Add event listeners for node hover and tap
+    cy.on('tap', 'node', function(evt) {
       const id = evt.target.id();
       const popup = document.getElementById('popup');
       document.getElementById('popup-content').innerHTML = marked.parse(tooltipMap[id] || 'No information.');
@@ -157,6 +160,7 @@
     makePopupDraggable();
   }
 
+  // Initialize the graph when the page loads
   initializeGraph().catch(err => {
     console.error('Error initializing graph:', err);
     alert('Failed to load graph data. Please check the console for details.');
