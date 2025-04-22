@@ -133,6 +133,7 @@
       container: document.getElementById('cy'),
       elements: [...nodes, ...edges],
       layout: { name: 'dagre', rankDir: 'TB', nodeSep: 50, edgeSep: 10, spacingFactor: 1.2 },
+      wheelSensitivity: 0.2, // Added to slow down zoom with the mouse wheel
       style: [
         { selector: 'node', style: { shape: 'rectangle', label: 'data(label)', color: '#000', 'font-size': '12px', 'text-valign': 'center', 'text-halign': 'center', 'text-wrap': 'wrap', width: 'label', padding: '5px', 'background-color': ele => {
             const s = ele.data('stage');
