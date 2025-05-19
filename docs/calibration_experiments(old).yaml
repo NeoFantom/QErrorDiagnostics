@@ -26,18 +26,50 @@ experiments:
       Already know the approximate value of the readout resonator's frequency.
     sweep:
       - readout frequency
-      - Z-line bias
+      - power (optional)
     monitor:
-      - readout signal amplitude
-      - readout signal phase
+      - readout signal strength
     procedure: |
-      - Apply a microwave pulse to the readout resonator
-      - Pad the readout signal with a vairable Z-line bias
-      - Sweep the readout frequency around the approximate resonator frequency
-      - Sweep the Z-line bias to find the flux insensitive point
+      - Perform a fine sweep of the readout frequency around the approximate resonator frequency.
+      - Optionally adjust the coupler bias or readout signal power to refine the measurement.
+      - In the high power regime, a Lorentzian dip or peak appears around the resonator frequency and may broaden with power.
+      - In the low power regime, dispersive coupling to the qubit causes a state-dependent shift of the resonator frequency, which fades as the power increases due to saturation.
+      - Monitor the response amplitude to precisely locate the resonator frequency (and power, if not empirically decided).
     post_operations: |
-      Update drive frequency
-      Update Z-line bias
+      Update the readout frequency & power in the registry for subsequent experiments.
+
+  - name: zline idle point
+    id: qb-zline-idle
+    measure_type: ensemble_avg
+    stage: qubit
+    assumptions: |
+      Readout resonator frequency is calibrated.
+    sweep:
+      - zline bias
+      - readout frequency
+    monitor:
+      - readout signal strength
+    procedure: |
+      - Sweep the zline bias and readout frequency while monitoring the readout signal strength.
+      - Identify the optimal zline bias point where the readout resonator is insensitive to qubit frequency fluctuation (i.e., zline fluctuation).
+    post_operations: |
+      Update the default qubit zline bias to an insensitive region.
+
+  - name: RO resonator spectroscopy (zline biased)
+    id: ro-resonator-freq-zline-biased
+    measure_type: ensemble_avg
+    stage: RO_resonator
+    assumptions: |
+      Qubit is properly biased.
+    sweep:
+      - readout frequency
+    monitor:
+      - readout signal strength
+    procedure: |
+      - Sweep the readout frequency while monitoring the readout signal strength.
+      - Identify the resonator frequency by locating the peak in the response amplitude.
+    post_operations: |
+      Update the readout frequency in the registry.
 
   - name: qubit f01 spectroscopy
     id: f01-spec
@@ -46,89 +78,60 @@ experiments:
     assumptions: |
       Readout frequency is calibrated; qubit is properly biased.
     sweep:
-      - drive amplitude
-      - Z-line bias
+      - drive frequency
     monitor:
       - readout signal strength
     procedure: |
-      - Pick a desired drive frequency in the tunable band
-      - Pad the drive pulse with a variable Z-line bias
-      - Apply a readout signal to the resonator
-      - Sweep the drive amplitude and Z-line bias
-      - Monitor the readout signal strength
+      - Sweep the drive frequency across a range to locate the 0→1 transition of the qubit.
+      - Apply a microwave pulse to the qubit and monitor the readout signal strength affected by the dispersive shift in the resonator.
     post_operations: |
-      Update the Z-line bias to align with the desired drive frequency
+      Update the qubit transition frequency f10 in the registry.
 
   - name: rabi for drive amplitude
     id: rabi-amp
     measure_type: ensemble_avg
     stage: qubit
     assumptions: |
-      Qubit transition frequency is assured by the updated Z-line bias.
+      Qubit transition frequency is approximately known.
     sweep:
       - drive pulse amplitude
     monitor:
       - readout signal strength
     procedure: |
-      - Drive the qubit with pulses of varying amplitudes
-      - Apply DRAG correction to the drive pulse
-      - Apply a readout signal to the resonator
+      - Drive the qubit with pulses of varying amplitudes while monitoring the readout signal strength.
       - Observe oscillations in the strength to determine the optimal π-pulse amplitude.
     post_operations: |
-      Update the π-pulse amplitude in the registry
-      Update the π/2-pulse amplitude in the registry
+      Update the π-pulse amplitude in the registry.
 
-  - name: RO frequency
-    id: ro-freq
-    measure_type: ensemble_avg
-    stage: RO_resonator
-    assumptions: |
-      We can drive the qubit to |1⟩ state with high fidelity
-    sweep:
-      - readout frequency
-    monitor:
-      - SNR
-    procedure: |
-      - Apply a trivial pulse or a π-pulse to the qubit, respectively
-      - Measure the readout signal strength
-      - Calculate the SNR
-      - Sweep the readout frequency
-      - Select the readout frequency with the highest SNR as operating frequency
-    post_operations: |
-      Update the readout frequency in the registry
-
-  - name: RO amplitude
-    id: ro-amp
+  - name: IQ scatter (uncalibrated)
+    id: iq-scatter-uncalibrated
     measure_type: single_shot
-    stage: RO_resonator
+    stage: qubit
     assumptions: |
-      Readout frequency is already set for maximal SNR
+      Qubit transition frequency is approximately known.
     procedure: |
-      - Apply a trivial pulse or a π-pulse to the qubit, respectively
-      - Measure the readout signal strength
-      - Plot the state population as a function of the readout amplitude
-      - Select the readout amplitude with best readout
+      - Drive the qubit with a π-pulse or do nothing and then measure the readout signal strength.
+      - Perform clustering on the I/Q data to identify the |0⟩ and |1⟩ states.
+      - Calculate the readout matrix.
     post_operations: |
-      Update the readout amplitude in the registry
+      Update the I/Q center and readout matrix in the registry.
 
   - name: ramsey (inaccurate)
     id: ramsey-inaccurate
     measure_type: ensemble_avg
     stage: qubit
     assumptions: |
-      - We have π-pulses and we use half its amplitude for π/2-pulses
-      - We can distinguish |0⟩, |1⟩ and higher states
+      π pulse is calibrated.
     sweep:
       - delay between π/2 pulses
     monitor:
-      - "|0⟩ state population"
+      - qubit population oscillations
     procedure: |
-      - Apply two π/2 pulses separated by a variable delay to the qubit.
+      - Apply two π/2 pulses (half amplitude π pulses) separated by a variable delay to the qubit.
       - Monitor the oscillations in the qubit population to measure the dephasing time T2* and frequency offset.
       - Optionally adjust the z bias to perform a ZPA scan.
     post_operations: |
-      - Update the qubit frequency
-      - Update T2* in the registry
+      Update the qubit coherence properties in the registry.
 
   - name: IQ scatter (after ramsey)
     id: iq-scatter-after-ramsey
@@ -192,10 +195,10 @@ graph:
   ro-roline-spec:
     - ro-resonator-spec
   ro-resonator-spec:
-    - qb-Z-line-idle
-  qb-Z-line-idle:
-    - ro-resonator-freq-Z-line-biased
-  ro-resonator-freq-Z-line-biased:
+    - qb-zline-idle
+  qb-zline-idle:
+    - ro-resonator-freq-zline-biased
+  ro-resonator-freq-zline-biased:
     - f01-spec
   f01-spec:
     - rabi-amp

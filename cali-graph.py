@@ -101,50 +101,6 @@ def get_dagre_layout():
         'refresh': time.time()
     }
 
-# === STYLES ===
-GRAPH_CONTAINER_STYLE = {
-    'border': '3px solid #0074D9',
-    'height': 'calc(100vh - 100px)',
-    'position': 'relative',
-    'marginLeft': '40px',
-    'marginRight': '40px',
-    'marginTop': '20px',
-    'marginBottom': '20px'
-}
-
-POPUP_STYLE = {
-    'position': 'absolute',
-    'top': '20px',
-    'left': '20px',
-    'backgroundColor': '#fff',
-    'border': '2px solid #0074D9',
-    'padding': '10px',
-    'display': 'none',
-    'zIndex': 1000,
-    'maxWidth': '400px',
-    'boxShadow': '0 0 10px rgba(0,0,0,0.2)'
-}
-
-RESTORE_BUTTON_STYLE = {
-    'textAlign': 'center',
-    'marginBottom': '20px',
-    'padding': '10px 20px',
-    'backgroundColor': '#0074D9',
-    'color': '#fff',
-    'border': 'none',
-    'borderRadius': '5px',
-    'cursor': 'pointer',
-    'fontSize': '16px',
-    'boxShadow': '0 4px 6px rgba(0, 0, 0, 0.1)',
-    'transition': 'background-color 0.3s ease'
-}
-
-CYTOSCAPE_STYLE = {
-    'width': '100%',
-    'height': '100%',
-    'border': 'none'
-}
-
 # === MAIN SCRIPT ===
 if __name__ == '__main__':
     # Load YAML data
@@ -174,24 +130,24 @@ if __name__ == '__main__':
     # Initialize Dash app
     app = dash.Dash(__name__)
 
-    # App layout with bordered container and popup div
+    # App layout with bordered container and popup div using CSS classes instead of inline styles
     graph_container = html.Div([
         html.Div([
             cyto.Cytoscape(
                 id='cytoscape-graph',
                 layout=get_dagre_layout(),
-                style=CYTOSCAPE_STYLE,
+                className='cytoscape-style',  # using external CSS
                 elements=elements,
-                stylesheet=stylesheet  # Use the dynamically generated stylesheet
+                stylesheet=stylesheet
             ),
-            html.Div(id='popup', style=POPUP_STYLE)
-        ], style=GRAPH_CONTAINER_STYLE),
+            html.Div(id='popup', className='popup-style')
+        ], className='graph-container'),
         html.Div([
             html.Button(
                 "Restore Layout",
                 id="restore-layout",
                 n_clicks=0,
-                style=RESTORE_BUTTON_STYLE  # Apply the button style directly here
+                className='restore-button-style'
             )
         ], style={'textAlign': 'center', 'width': '100%', 'marginTop': '20px'}),
     ])
@@ -205,21 +161,10 @@ if __name__ == '__main__':
     )
     def display_popup(data):
         if not data:
-            return '', {'display': 'none'}
+            return '', {}  # let CSS handle the hiding if necessary
         node_id = data['id']
         content = tooltip_map[node_id]
-        return dcc.Markdown(content), {
-            'position': 'absolute',
-            'top': '20px',
-            'left': '20px',
-            'backgroundColor': '#fff',
-            'border': '2px solid #0074D9',
-            'padding': '10px',
-            'display': 'block',
-            'zIndex': 1000,
-            'maxWidth': '400px',
-            'boxShadow': '0 0 10px rgba(0,0,0,0.2)'
-        }
+        return dcc.Markdown(content), {}
 
     # Callback to restore graph layout to Dagre default
     @app.callback(
