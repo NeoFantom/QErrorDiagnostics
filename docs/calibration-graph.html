@@ -3,202 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <title>Calibration Experiments Graph</title>
+  <link rel="stylesheet" href="calibration-graph.css">
   <script src="https://unpkg.com/cytoscape@3.21.1/dist/cytoscape.min.js"></script>
   <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
   <script src="https://unpkg.com/cytoscape-dagre@2.4.0/cytoscape-dagre.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding-left: 40px;
-      padding-right: 40px;
-      padding-top: 20px;
-      padding-bottom: 20px;
-      background: #f4f4f4;
-    }
-    #cy {
-      width: 100%;
-      height: 80vh;
-      border: 3px solid #0074D9;
-      background: #fff;
-    }
-    #popup {
-      display: none;
-      position: absolute;
-      background: #fff;
-      border: 2px solid #0074D9;
-      padding: 0;
-      max-width: 500px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-      z-index: 1000;
-    }
-    #popup-header {
-      cursor: move;
-      padding: 5px;
-      background: #0074D9;
-      color: white;
-      font-weight: bold;
-      border-bottom: 1px solid #0074D9;
-      position: relative;
-    }
-    #popup .close-btn {
-      position: absolute;
-      top: 5px;
-      right: 5px;
-      background: #0074D9;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 14px;
-      line-height: 1;
-      padding: 0;
-    }
-    #popup-content {
-      padding: 10px;
-    }
-    #controls {
-      margin-top: 20px;
-      text-align: center;
-    }
-    button {
-      background: #0074D9;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-  </style>
 </head>
 <body>
-
-<div id="cy"></div>
-<div id="popup">
-  <div id="popup-header">
-    <button class="close-btn" onclick="closePopup()">&times;</button>
+  <div id="cy">
+    <!-- <div id="legend"></div> -->
   </div>
-  <div id="popup-content"></div>
-</div>
-<div id="controls">
-  <button onclick="restoreLayout()">Restore Layout</button>
-</div>
-
-<script>
-  async function loadGraphData() {
-    const response = await fetch('calibration_experiments.yaml');
-    const yamlText = await response.text();
-    const yamlData = jsyaml.load(yamlText);
-
-    const nodes = yamlData.experiments.map(exp => ({ data: { id: exp.id, label: exp.name, stage: exp.stage } }));
-    const edges = Object.entries(yamlData.graph).flatMap(([source, targets]) => targets.map(target => ({ data: { source, target } })));
-    return { nodes, edges, yamlData };
-  }
-
-  function closePopup() {
-    const popup = document.getElementById('popup');
-    popup.style.display = 'none';
-  }
-
-  // Helper function to make the popup draggable
-  function makePopupDraggable() {
-    const popup = document.getElementById('popup');
-    const header = document.getElementById('popup-header');
-    let offsetX = 0, offsetY = 0, isDragging = false;
-
-    header.onmousedown = (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      isDragging = true;
-      offsetX = e.clientX - popup.offsetLeft;
-      offsetY = e.clientY - popup.offsetTop;
-      document.onmousemove = (e) => {
-        if (isDragging) {
-          popup.style.left = `${e.clientX - offsetX}px`;
-          popup.style.top = `${e.clientY - offsetY}px`;
-        }
-      };
-      document.onmouseup = () => {
-        isDragging = false;
-        document.onmousemove = null;
-        document.onmouseup = null;
-      };
-    };
-
-    // Prevent pan when clicking anywhere on the popup
-    popup.addEventListener('mousedown', e => {
-      e.stopPropagation();
-    });
-  }
-
-  // New helper function to generate tooltips for an experiment
-  function generateTooltip(exp) {
-    let tooltip = [];
-    for (let key in exp) {
-      if (key === "id") continue;
-      let value = exp[key];
-      if (key === "procedure") {
-        value = "\n" + value; // Prepend a newline for 'procedure'
-      }
-      if (typeof value === "string" && !value.endsWith("\n\n")) {
-        value += "\n\n"; // Ensure it ends with two newlines
-      }
-      tooltip.push(`**${key}**: ${value}`);
-    }
-    return tooltip.join("\n\n");
-  }
-
-  async function initializeGraph() {
-    const { nodes, edges, yamlData } = await loadGraphData();
-
-    // Use generateTooltip() for each experiment to build tooltipMap
-    const tooltipMap = yamlData.experiments.reduce((map, exp) => {
-      map[exp.id] = generateTooltip(exp);
-      return map;
-    }, {});
-
-    // Initialize Cytoscape with the loaded data
-    const cy = cytoscape({
-      container: document.getElementById('cy'),
-      elements: [...nodes, ...edges],
-      layout: { name: 'dagre', rankDir: 'TB', nodeSep: 50, edgeSep: 10, spacingFactor: 1.2 },
-      wheelSensitivity: 0.2, // Added to slow down zoom with the mouse wheel
-      style: [
-        { selector: 'node', style: { shape: 'rectangle', label: 'data(label)', color: '#000', 'font-size': '12px', 'text-valign': 'center', 'text-halign': 'center', 'text-wrap': 'wrap', width: 'label', padding: '5px', 'background-color': ele => {
-            const s = ele.data('stage');
-            return s === 'RO_resonator'? '#FFD700': s === 'qubit'? '#90EE90': s === '1qb_gate'? '#87CEFA': '#ccc';
-        } } },
-        { selector: 'edge', style: { 'curve-style': 'bezier', 'target-arrow-shape': 'triangle', 'line-color': '#ccc', 'target-arrow-color': '#ccc' } }
-      ]
-    });
-
-    // Add event listeners for node hover and tap
-    cy.on('tap', 'node', function(evt) {
-      const id = evt.target.id();
-      const popup = document.getElementById('popup');
-      document.getElementById('popup-content').innerHTML = marked.parse(tooltipMap[id] || 'No information.');
-      popup.style.display = 'block';
-      popup.style.top = `${evt.originalEvent.clientY + 10}px`;
-      popup.style.left = `${evt.originalEvent.clientX + 10}px`;
-    });
-
-    window.restoreLayout = () => cy.layout({ name: 'dagre', rankDir: 'TB', nodeSep: 50, edgeSep: 10, spacingFactor: 1.2 }).run();
-
-    makePopupDraggable();
-  }
-
-  // Initialize the graph when the page loads
-  initializeGraph().catch(err => {
-    console.error('Error initializing graph:', err);
-    alert('Failed to load graph data. Please check the console for details.');
-  });
-</script>
+  <div id="popup">
+    <div id="popup-header">
+      <button class="close-btn" onclick="closePopup()">&times;</button>
+    </div>
+    <div id="popup-content"></div>
+  </div>
+  <div id="resotre-layout-btn">
+    <button onclick="restoreLayout()">Restore Layout</button>
+  </div>
+  <script src="calibration-graph.js"></script>
 </body>
 </html>

@@ -189,25 +189,14 @@ experiments:
       Update the single-qubit gate parameters in the registry.
 
 graph:
-  ro-roline-spec:
-    - ro-resonator-spec
-  ro-resonator-spec:
-    - qb-Z-line-idle
-  qb-Z-line-idle:
-    - ro-resonator-freq-Z-line-biased
-  ro-resonator-freq-Z-line-biased:
-    - f01-spec
-  f01-spec:
-    - rabi-amp
-  rabi-amp:
-    - iq-scatter-uncalibrated
-  iq-scatter-uncalibrated:
-    - ramsey-inaccurate
-  ramsey-inaccurate:
-    - iq-scatter-after-ramsey
-  iq-scatter-after-ramsey:
-    - meas-fid
-  meas-fid:
-    - f12-spec
-  f12-spec:
-    - 1q-cal
+  ro-roline-spec: [ro-resonator-spec]
+  ro-resonator-spec: [f01-spec]
+  f01-spec: [rabi-amp]
+  rabi-amp: [ro-freq]
+  ro-freq: [ro-amp]
+  ro-amp: [ramsey-inaccurate]
+  ramsey-inaccurate: [iq-scatter-after-ramsey]
+  iq-scatter-after-ramsey: [meas-fid]
+  meas-fid: [f12-spec, 1q-cal]
+  f12-spec: [1q-cal]
+  1q-cal: [meas-fid]
