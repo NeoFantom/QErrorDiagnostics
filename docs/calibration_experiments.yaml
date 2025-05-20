@@ -39,7 +39,7 @@ experiments:
       Update drive frequency
       Update Z-line bias
 
-  - name: qubit f01 spectroscopy
+  - name: Qubit f01 spectroscopy
     id: f01-spec
     measure_type: ensemble_avg
     stage: qubit
@@ -59,7 +59,7 @@ experiments:
     post_operations: |
       Update the Z-line bias to align with the desired drive frequency
 
-  - name: rabi for drive amplitude
+  - name: Rabi for drive amplitude
     id: rabi-amp
     measure_type: ensemble_avg
     stage: qubit
@@ -108,11 +108,13 @@ experiments:
       - Measure the readout signal strength
       - Plot the state population as a function of the readout amplitude
       - Select the readout amplitude with best readout
+      - Perform a clustering analysis to separate the |0⟩ and |1⟩ states with the optimal readout amplitude
     post_operations: |
-      Update the readout amplitude in the registry
+      - Update the readout amplitude in the registry
+      - Update the I/Q center and readout matrix in the registry.
 
-  - name: ramsey (inaccurate)
-    id: ramsey-inaccurate
+  - name: Ramsey
+    id: ramsey
     measure_type: ensemble_avg
     stage: qubit
     assumptions: |
@@ -124,51 +126,74 @@ experiments:
       - "|0⟩ state population"
     procedure: |
       - Apply two π/2 pulses separated by a variable delay to the qubit.
-      - Monitor the oscillations in the qubit population to measure the dephasing time T2* and frequency offset.
-      - Optionally adjust the z bias to perform a ZPA scan.
+      - Add a phase shift f_fringe*delay to the second pulse create a fringe pattern (shift the frame by f_fringe) for better observation
+      - Monitor the oscillations in the qubit population
+      - Perform a curve fit and/or a FT to extract the observed frequency
+      - Compare with f_fringe to calibrate the qubit frequency
     post_operations: |
       - Update the qubit frequency
-      - Update T2* in the registry
 
-  - name: IQ scatter (after ramsey)
-    id: iq-scatter-after-ramsey
-    measure_type: single_shot
-    stage: qubit
-    assumptions: |
-      Qubit transition frequency is approximately known.
-    procedure: |
-      - Drive the qubit with a π-pulse or do nothing and then measure the readout signal strength.
-      - Perform clustering on the I/Q data to identify the |0⟩ and |1⟩ states.
-      - Calculate the readout matrix.
-    post_operations: |
-      Update the I/Q center and readout matrix in the registry.
-
-  - name: measurement fidelity
-    id: meas-fid
-    measure_type: single_shot
-    stage: qubit
-    assumptions: |
-      IQ state clusters for |0⟩ and |1⟩ are separable.
-    procedure: |
-      Prepare the qubit in |0⟩ and |1⟩ states repeatedly and measure the assignment error.
-    post_operations: |
-      Update the readout fidelity metrics in the registry.
-
-  - name: f12 spectroscopy
+  - name: Qubit f12 spectroscopy
+    description: |
+      To find the DRAG parameter, we must know the anharmonicity, or f12
     id: f12-spec
     measure_type: ensemble_avg
     stage: qubit
     assumptions: |
       Qubit is calibrated up to |1⟩ state; sufficient anharmonicity.
     sweep:
-      - drive frequency near |1⟩→|2⟩
+      - drive frequency of |1⟩→|2⟩
     monitor:
-      - population in |2⟩ or dispersive shift
+      - population in |1⟩ or dispersive shift
     procedure: |
-      - Drive the qubit from the |1⟩ state to the |2⟩ state by sweeping the drive frequency near the |1⟩→|2⟩ transition.
-      - Monitor the population in the |2⟩ state or the dispersive shift to locate the transition.
+      - Drive |0⟩→|1⟩, then |1⟩→|2⟩ with variable frequency, then |2⟩→|1⟩, then readout
+      - Sweep the drive frequency of the |1⟩→|2⟩
+      - Monitor the population in the |1⟩ state or the dispersive shift to locate the transition.
+      - Calculate the DRAG parameter using the anharmonicity
     post_operations: |
-      Update the |1⟩→|2⟩ transition frequency in the registry.
+      Update the f12 in the registry.
+      Update the DRAG parameter in the registry.
+
+  - name: Pulse detuning
+    description: |
+      To compensate the phase error due to |1⟩-|2⟩ coupling, we need a detuning on the drive frequency
+    id: pulse-detuning
+    measure_type: ensemble_avg
+    stage: qubit
+    assumptions: |
+      Anharmonicity or f12 is calibrated.
+    procedure: |
+      - Apply multiple π-pulse and -π-pulse pairs with a variable detuning
+      - Measure the population in |0⟩ and |1⟩ states
+      - Find the optimal detuning that maximizes the population in |0⟩ state
+    post_operations: |
+      Update the drive frequency in the registry.
+
+  - name: π-pulse amplitude
+    id: pi-amp
+    measure_type: single_shot
+    stage: qubit
+    assumptions: |
+      Qubit frequency and pulse detuning are calibrated
+    procedure: |
+      - Apply multiple π-pulses with a variable amplitude
+      - Sweep the amplitude to find the optimum
+      - Measure the population in |0⟩ and |1⟩ states
+    post_operations: |
+      Update the π-pulse fidelity metrics in the registry.
+
+  - name: π/2-pulse amplitude
+    id: halfpi-amp
+    measure_type: single_shot
+    stage: qubit
+    assumptions: |
+      Qubit frequency and pulse detuning are calibrated
+    procedure: |
+      - Apply multiple π/2-pulses with a variable amplitude
+      - Sweep the amplitude to find the optimum
+      - Measure the population in |0⟩ and |1⟩ states
+    post_operations: |
+      Update the π/2-pulse fidelity metrics in the registry.
 
   - name: one-qubit gate calibration
     id: 1q-cal
@@ -194,9 +219,10 @@ graph:
   f01-spec: [rabi-amp]
   rabi-amp: [ro-freq]
   ro-freq: [ro-amp]
-  ro-amp: [ramsey-inaccurate]
-  ramsey-inaccurate: [iq-scatter-after-ramsey]
-  iq-scatter-after-ramsey: [meas-fid]
-  meas-fid: [f12-spec, 1q-cal]
-  f12-spec: [1q-cal]
-  1q-cal: [meas-fid]
+  ro-amp: [ramsey]
+  ramsey: [f12-spec]
+  f12-spec: [pulse-detuning]
+  pulse-detuning: [pi-amp]
+  pi-amp: [halfpi-amp]
+  halfpi-amp: [1q-cal]
+  1q-cal: []

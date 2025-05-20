@@ -15,19 +15,35 @@ const GRAPH_LAYOUT = {
 
 // Data loading
 async function loadGraphData() {
-  const response = await fetch('calibration_experiments.yaml');
-  const yamlText = await response.text();
-  const yamlData = jsyaml.load(yamlText);
+  try {
+    console.log('Attempting to load YAML file...');
+    const response = await fetch('./calibration_experiments.yaml');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    console.log('YAML file fetched successfully');
+    const yamlText = await response.text();
+    console.log('YAML content:', yamlText.substring(0, 100) + '...' + '(omitted)'); // Show first 100 chars
+    const yamlData = jsyaml.load(yamlText);
+    console.log('YAML parsed successfully:', yamlData);
 
-  const nodes = yamlData.experiments.map(exp => ({
-    data: { id: exp.id, label: exp.name, stage: exp.stage }
-  }));
-  const edges = Object.entries(yamlData.graph)
-    .flatMap(([source, targets]) => 
-      targets.map(target => ({ data: { source, target } }))
-    );
+    const nodes = yamlData.experiments.map(exp => ({
+      data: { id: exp.id, label: exp.name, stage: exp.stage }
+    }));
+    const edges = Object.entries(yamlData.graph)
+      .flatMap(([source, targets]) => 
+        targets.map(target => ({ data: { source, target } }))
+      );
 
-  return { nodes, edges, yamlData };
+    return { nodes, edges, yamlData };
+  } catch (err) {
+    console.error('Error loading graph data:', err);
+    console.error('Error details:', {
+      message: err.message,
+      stack: err.stack
+    });
+    throw err;
+  }
 }
 
 // Tooltip generation
@@ -165,4 +181,5 @@ async function initializeGraph() {
 }
 
 // Initialize on load
+console.log('Document loaded, initializing graph...');
 document.addEventListener('DOMContentLoaded', initializeGraph);
