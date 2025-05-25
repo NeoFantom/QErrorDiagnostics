@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Calibration Experiments Graph</title>
+  <link rel="stylesheet" href="error-analysis.css">
+  <script src="https://unpkg.com/cytoscape@3.21.1/dist/cytoscape.min.js"></script>
+  <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
+  <script src="https://unpkg.com/cytoscape-dagre@2.4.0/cytoscape-dagre.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  <div id="cy">
+    <!-- <div id="legend">Stages of eexperiments</div> -->
+  </div>
+  <div id="popup">
+    <div id="popup-header">
+      <button class="close-btn" onclick="closePopup()">&times;</button>
+    </div>
+    <div id="popup-content"></div>
+  </div>
+  <div id="restore-layout-btn">
+    <button onclick="restoreLayout()">Restore Layout</button>
+  </div>
+  <script src="error-analysis.js"></script>
+</body>
+</html>

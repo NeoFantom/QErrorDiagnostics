@@ -1,0 +1,16 @@
+# edit: neo15
+
+experiments:
+  - name: Meas. stability
+    id: meas-stability
+
+  - name: Leakage
+    id: leakage
+
+  - name: XY Pulse
+    id: xy-pulse
+
+graph:
+  meas-stability: [leakage]
+  leakage: [xy-pulse]
+  xy-pulse: []

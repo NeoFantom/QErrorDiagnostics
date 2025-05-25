@@ -25,13 +25,31 @@
       border-radius: 5px; 
       margin-top: 20px;
     }
+    .subject-panel {
+      background: #fff; 
+      border: 2px solid #005cc5;
+      padding: 20px; 
+      border-radius: 5px; 
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+      margin-bottom: 20px; 
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>QError Diagnostics Project</h1>
-    <p>Click the button below to view the Calibration Experiments Graph.</p>
-    <a class="button" href="calibration-graph.html">View Graph</a>
+    <div class="subject-panel">
+      <h2>Calibration Experiments</h2>
+      <a class="button" href="./calibration-graph/calibration-graph.html">
+        View Graph
+      </a>
+    </div>
+    <div class="subject-panel">
+      <h2>Error analysis procedure</h2>
+      <a class="button" href="./error-analysis/error-analysis.html">
+        View Analysis
+      </a>
+    </div>
   </div>
 </body>
 </html>

@@ -134,7 +134,7 @@ experiments:
       - Update the qubit frequency
 
   - name: Qubit f12 spectroscopy
-    description: |
+    goal: |
       To find the DRAG parameter, we must know the anharmonicity, or f12
     id: f12-spec
     measure_type: ensemble_avg
@@ -155,13 +155,17 @@ experiments:
       Update the DRAG parameter in the registry.
 
   - name: Pulse detuning
-    description: |
+    goal: |
       To compensate the phase error due to |1⟩-|2⟩ coupling, we need a detuning on the drive frequency
     id: pulse-detuning
     measure_type: ensemble_avg
     stage: qubit
     assumptions: |
       Anharmonicity or f12 is calibrated.
+    sweep:
+      - drive frequency detuning
+    monitor:
+      - population in |0⟩ state
     procedure: |
       - Apply multiple π-pulse and -π-pulse pairs with a variable detuning
       - Measure the population in |0⟩ and |1⟩ states
@@ -175,8 +179,12 @@ experiments:
     stage: qubit
     assumptions: |
       Qubit frequency and pulse detuning are calibrated
+    sweep:
+      - drive pulse amplitude
+    monitor:
+      - population in |0⟩ state
     procedure: |
-      - Apply multiple π-pulses with a variable amplitude
+      - Apply an even number of π-pulses with a variable amplitude
       - Sweep the amplitude to find the optimum
       - Measure the population in |0⟩ and |1⟩ states
     post_operations: |
@@ -188,6 +196,10 @@ experiments:
     stage: qubit
     assumptions: |
       Qubit frequency and pulse detuning are calibrated
+    sweep:
+      - drive pulse amplitude
+    monitor:
+      - population in |0⟩ state
     procedure: |
       - Apply multiple π/2-pulses with a variable amplitude
       - Sweep the amplitude to find the optimum
@@ -195,23 +207,49 @@ experiments:
     post_operations: |
       Update the π/2-pulse fidelity metrics in the registry.
 
-  - name: one-qubit gate calibration
-    id: 1q-cal
+  - name: XY-Z timing
+    goal: |
+      Make sure the XY and Z drives are synchronized
+    id: xy-z-timing
     measure_type: ensemble_avg
-    stage: 1qb_gate
+    stage: qubit
     assumptions: |
-      Qubit transition frequency and π-pulse duration are known.
+      XY drive and Z drive are calibrated.
     sweep:
-      - π pulse amplitude
-      - virtual Z angle
-      - detuning for phase adjustment
+      - Z (or XY) pulse timing
     monitor:
-      - final qubit state fidelity
+      - population in |0⟩ state
     procedure: |
-      - Fine-tune the single-qubit gate parameters, including amplitude, detuning, and phase shift.
-      - Perform experiments to optimize the π and π/2 pulses for high-fidelity quantum operations.
+      - Apply a π-pulse
+      - Apply a flattop detuning with equal length but variable starting time
+      - Measure the population in |0⟩
+      - Record the timing that maximizes the population in |0⟩
     post_operations: |
-      Update the single-qubit gate parameters in the registry.
+      Update the Z (or XY) timing in the registry.
+
+  - name: Z-bias map
+    goal: |
+      Find the mapping from Z-line bias to the qubit frequency
+    id: z-bias-map
+    measure_type: ensemble_avg
+    stage: qubit
+    assumptions: |
+      Qubit frequency and pulse detuning are calibrated.
+    sweep:
+      - Z-line bias
+    monitor:
+      - "|0⟩ state population"
+    procedure: |
+      - Apply a readout signal to the resonator
+      - Sweep the Z-line bias to find the flux insensitive point
+      - Measure the readout signal strength
+    post_operations: |
+      Update the Z-line bias in the registry.
+  
+  - name: 1qb benchmarking
+    id: 1qb-bench
+    measure_type: ensemble_avg
+    stage: qubit
 
 graph:
   ro-roline-spec: [ro-resonator-spec]
@@ -224,5 +262,6 @@ graph:
   f12-spec: [pulse-detuning]
   pulse-detuning: [pi-amp]
   pi-amp: [halfpi-amp]
-  halfpi-amp: [1q-cal]
-  1q-cal: []
+  halfpi-amp: [xy-z-timing]
+  xy-z-timing: [z-bias-map]
+  z-bias-map: []
