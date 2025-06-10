@@ -4,5 +4,12 @@
 			"path": "."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"cSpell.words": [
+			"ansatz",
+			"mathrm",
+	        "infty"
+		],
+		"markdown.validate.enabled": true
+	}
 }

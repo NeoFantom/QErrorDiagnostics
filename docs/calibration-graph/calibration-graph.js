@@ -2,7 +2,7 @@
 const STAGE_COLORS = {
   'RO_resonator': '#FFD700',
   'qubit': '#90EE90',
-  '1qb_gate': '#87CEFA'
+  'two-qubit': '#87CEFA'
 };
 
 const GRAPH_LAYOUT = {

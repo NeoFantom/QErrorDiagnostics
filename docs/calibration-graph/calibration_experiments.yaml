@@ -251,6 +251,59 @@ experiments:
     measure_type: ensemble_avg
     stage: qubit
 
+  - name: Leakage suppresion
+    id: leakage-suppression
+    measure_type: ensemble_avg
+    stage: qubit
+    assumptions: |
+      Qubit frequency and pulse detuning are calibrated.
+    sweep:
+      - DRAG coefficient
+      - drive pulse detuningα
+    monitor:
+      - population in |0⟩ state
+    procedure: |
+      - For each $\alpha$, optimize detuning to get best RB fidelity
+      - Now that fidelity is independent from $\alpha$, optimize $\alpha$ for leakage
+    post_operations: |
+      Update the π-pulse fidelity metrics in the registry.
+
+  - name: Flux pre-distortion
+    id: flux-pre-distortion
+    measure_type: optimization
+    stage: two-qubit
+    assumptions: |
+      Each qubit is calibrated for single-qubit operations.
+    objective: |
+      Minimize the diffrence between estimated phase drift and actual phase drift
+    procedure: |
+      - Model the transfer function
+      - Minimize the difference (See note)
+   
+  - name: Multi-qubit timing
+    id: multi-qubit-timing
+    measure_type: ensemble_avg
+    stage: two-qubit
+    assumptions: |
+      Each qubit is calibrated for single-qubit operations.
+    sweep:
+      - relative timing of the qB drive
+    monitor:
+      - population in |0⟩ state of two qubits
+    procedure: |
+      - Apply π pulse to qA
+      - Apply a flattop detuning to both qubits to bring them on resonance
+      - Vary the timing of the qB
+
+  - name: Flux crosstalk
+    id: flux-crosstalk
+    measure_type: ensemble_avg
+    stage: two-qubit
+    sweep:
+      - Z-line bias of the target qubit
+    monitor:
+      - population in |0⟩ state of the target qubit
+
 graph:
   ro-roline-spec: [ro-resonator-spec]
   ro-resonator-spec: [f01-spec]
@@ -264,4 +317,8 @@ graph:
   pi-amp: [halfpi-amp]
   halfpi-amp: [xy-z-timing]
   xy-z-timing: [z-bias-map]
-  z-bias-map: []
+  z-bias-map: [1qb-bench]
+  1qb-bench: [leakage-suppression]
+  leakage-suppression: [flux-pre-distortion]
+  flux-pre-distortion: [multi-qubit-timing]
+  multi-qubit-timing: [flux-crosstalk]
